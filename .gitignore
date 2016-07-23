@@ -1,3 +1,8 @@
+# Leo
+*~
+*.pdf
+output
+
 *.rbc
 capybara-*.html
 .rspec
