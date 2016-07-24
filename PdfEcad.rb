@@ -23,7 +23,7 @@ module Importers
                     # pageLines[3]: 
                     # pageLines[4]: 
                     # pageLines[5]:  ASSOCIAÇÃO: ABRAMUS - ASSOCIACAO BRASILEIRA DE MÚSICA
-                    @authorName = pageLines[6].split('   ')[3].strip
+                    # pageLines[6]:  TITULAR: 4882   CARLOS DE SOUZA   PSEUDÔNIMO: CARLOS CAREQA   CATEGORIA: TODAS
                     # pageLines[7]: 
                     # pageLines[8]: 
                     # pageLines[9]: 
@@ -44,7 +44,7 @@ module Importers
                               else
                                    if (pageLines[loop_pivot][pageLines[loop_pivot].length-5] == '/') then # last work finished at end of page
                                         state = 2 # "Preparing to call work()"
-                                        worksHashes.push(work(@authorName + " | " + workLine))
+                                        worksHashes.push(work(workLine))
                                         state = 0 # "Seeking work"
                                    else # the work is present/described in both pages
                                         workLine += pageLines[loop_pivot]
@@ -68,7 +68,7 @@ module Importers
                                    else
                                         if (loop_pivot < pageLines.length-1)
                                              state = 2 # "Preparing to call work()"
-                                             worksHashes.push(work(@authorName + " | " + workLine))
+                                             worksHashes.push(work(workLine))
                                              state = 0 # "Seeking work"
                                         else
                                              state = 3 # "Work transcending pages"
@@ -86,10 +86,6 @@ module Importers
           end
           
           def right_holder(line)
-               # puts "right_holder line:|#{line}|"
-               if (@authorName == nil)
-                    @authorName = DEFAULT_AUTHOR
-               end
                informations = line.split('  ')
                right_holder = Hash.new
                index = 0
@@ -136,13 +132,14 @@ module Importers
                          index += 1
                     end
                     catESPorcentagem = informations[index].split(' ')
+                    right_holder[:role] = CATEGORIES[catESPorcentagem[0].strip]
                     if catESPorcentagem.length > 1
                          right_holder[:share] = catESPorcentagem[1].strip
                     else
                          index += 1
                          right_holder[:share] = informations[index].strip
                     end
-                    # fix for cat E works
+                    # fix for specific error: remove date from category E works
                     if right_holder[:share].length > 6 then
                          right_holder[:share] = right_holder[:share][0, right_holder[:share].length - 8].strip
                     end
@@ -150,19 +147,13 @@ module Importers
                          right_holder[:share] += '00'
                     end
                     right_holder[:share] = right_holder[:share].to_f
-                    if @authorName.eql? right_holder[:name] then
-                         right_holder[:role] = 'Author'
-                    else
-                         right_holder[:role] = 'Publisher/Versionist/'
-                    end
                     return right_holder
           end
           
           def work(line)
                components = line.split(' | ')
                # step 1: parse informations about the work
-               @authorName = components[0]
-               workDs = components[1]
+               workDs = components[0]
                informations = workDs.split('  ')
                workHash = Hash.new
                index = 0
@@ -209,7 +200,7 @@ module Importers
                end
                workHash[:created_at] = informations[index].strip
                # step 2: parse informations about the right_holders
-               rh_index = 2
+               rh_index = 1
                right_holders = []
                while rh_index < components.length do
                     this_right_holder = right_holder(components[rh_index])
