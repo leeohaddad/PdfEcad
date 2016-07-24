@@ -89,69 +89,78 @@ module Importers
                informations = line.split('  ')
                right_holder = Hash.new
                index = 0
-                    # CÓDIGO does not belong to right_holder hash
+               # get external_id
+               while informations[index].length == 0 do
                     index += 1
-                    # get right_holder name
-                    while informations[index].length == 0 do
-                         index += 1
-                    end
-                    right_holder[:name] = informations[index].strip
-                    index +=1
-                    # get right_holder pseudo
-                    pseudos = []
-                    information_checker = 0
-                    while informations[index].length == 0 do
-                         index += 1
-                         information_checker += 1
-                    end
-                    # if there is no pseudos, information_checks detects too many empty elements in informations array after right_holder name
-                    if information_checker < 15 then
-                         pseudo = Hash.new
-                         pseudo[:name] = informations[index].strip
-                         pseudo[:main] = true
-                         pseudos.push(pseudo)
-                         index += 1
-                    end
-                    right_holder[:pseudos] = pseudos
-                    # get right_holder cae/ipi and society_name
-                    while informations[index].length == 0 do
-                         index += 1
-                    end
-                    caeEAssociacao = informations[index].split(' ')
-                    if numeric?(caeEAssociacao[0][0]) != nil then
-                         right_holder[:ipi] = caeEAssociacao[0]
-                         index += 1
-                    else 
-                         right_holder[:ipi] = ""
-                    end
-                    right_holder[:ipi] = right_holder[:ipi].tr('.', '')
-                    if caeEAssociacao.length > 1 && numeric?(caeEAssociacao[1][0]) == nil then
-                         right_holder[:society_name] = caeEAssociacao[1].strip
-                    end
-                    # get right_holder role and share
-                    if numeric?(informations[index][informations[index].length-1]) == nil then
-                         index += 1
-                    end
-                    while informations[index].length == 0
-                         index += 1
-                    end
-                    catESPorcentagem = informations[index].split(' ')
-                    right_holder[:role] = CATEGORIES[catESPorcentagem[0].strip]
-                    if catESPorcentagem.length > 1
-                         right_holder[:share] = catESPorcentagem[1].strip
-                    else
-                         index += 1
-                         right_holder[:share] = informations[index].strip
-                    end
-                    # fix for specific error: remove date from category E works
-                    if right_holder[:share].length > 6 then
-                         right_holder[:share] = right_holder[:share][0, right_holder[:share].length - 8].strip
-                    end
-                    if right_holder[:share][right_holder[:share].length-1] == ',' then
-                         right_holder[:share] += '00'
-                    end
-                    right_holder[:share] = right_holder[:share].to_f
-                    return right_holder
+               end
+               external_ids = []
+               external_id = Hash.new
+               external_id[:source_name] = 'Ecad'
+               external_id[:source_id] = informations[index].strip
+               external_ids.push(external_id)
+               right_holder[:external_ids] = external_ids
+               index += 1
+               # get right_holder name
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               right_holder[:name] = informations[index].strip
+               index +=1
+               # get right_holder pseudo
+               pseudos = []
+               information_checker = 0
+               while informations[index].length == 0 do
+                    index += 1
+                    information_checker += 1
+               end
+               # if there is no pseudos, information_checks detects too many empty elements in informations array after right_holder name
+               if information_checker < 15 then
+                    pseudo = Hash.new
+                    pseudo[:name] = informations[index].strip
+                    pseudo[:main] = true
+                    pseudos.push(pseudo)
+                    index += 1
+               end
+               right_holder[:pseudos] = pseudos
+               # get right_holder cae/ipi and society_name
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               caeEAssociacao = informations[index].split(' ')
+               if numeric?(caeEAssociacao[0][0]) != nil then
+                    right_holder[:ipi] = caeEAssociacao[0]
+                    index += 1
+               else 
+                    right_holder[:ipi] = ""
+               end
+               right_holder[:ipi] = right_holder[:ipi].tr('.', '')
+               if caeEAssociacao.length > 1 && numeric?(caeEAssociacao[1][0]) == nil then
+                    right_holder[:society_name] = caeEAssociacao[1].strip
+               end
+               # get right_holder role and share
+               if numeric?(informations[index][informations[index].length-1]) == nil then
+                    index += 1
+               end
+               while informations[index].length == 0
+                    index += 1
+               end
+               catESPorcentagem = informations[index].split(' ')
+               right_holder[:role] = CATEGORIES[catESPorcentagem[0].strip]
+               if catESPorcentagem.length > 1
+                    right_holder[:share] = catESPorcentagem[1].strip
+               else
+                    index += 1
+                    right_holder[:share] = informations[index].strip
+               end
+               # fix for specific error: remove date from category E works
+               if right_holder[:share].length > 6 then
+                    right_holder[:share] = right_holder[:share][0, right_holder[:share].length - 8].strip
+               end
+               if right_holder[:share][right_holder[:share].length-1] == ',' then
+                    right_holder[:share] += '00'
+               end
+               right_holder[:share] = right_holder[:share].to_f
+               return right_holder
           end
           
           def work(line)
