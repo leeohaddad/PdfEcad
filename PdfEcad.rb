@@ -195,7 +195,7 @@ module Importers
                end
                # if there is no iswc for this work, iswc is null
                if workHash[:iswc] == '-'
-                    workHash[:iswc] = nil
+                    workHash[:iswc] = '-   .   .   -'
                     index += 3
                end
                # get title
