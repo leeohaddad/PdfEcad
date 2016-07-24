@@ -1,4 +1,6 @@
-require 'spec_helper'
+# require 'spec_helper'
+require 'rails'
+require_relative '../PdfEcad'
 
 describe "Ecad PDF Import" do
   before(:each) do
@@ -59,3 +61,4 @@ describe "Ecad PDF Import" do
     work[:situation].should == "LB"
     work[:created_at].should == "18/03/2010"
   end
+end

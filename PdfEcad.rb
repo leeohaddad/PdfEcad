@@ -207,6 +207,37 @@ module Importers
                return workHash
           end
 
+          def debug_log(worksHashes)
+               index = 0
+               length = worksHashes.length
+               puts "Works Hashes (#{length}):"
+               puts ""
+               while index < length
+                    if worksHashes[index][:iswc] != nil
+                         puts "iswc: #{worksHashes[index][:iswc]}"
+                    else
+                         puts 'iswc: null'
+                    end
+                    puts "title: #{worksHashes[index][:title]}"
+                    puts "external_id: #{worksHashes[index][:external_ids][0][:source_name] + ' | ' + worksHashes[index][:external_ids][0][:source_id]}"
+                    puts "situation: #{worksHashes[index][:situation]}"
+                    puts "created_at: #{worksHashes[index][:created_at]}"
+                    puts "right_holders (#{worksHashes[index][:right_holders].length.to_s}):"
+                    worksHashes[index][:right_holders].each do |right_holder|
+                         puts '-------------------------' 
+                         puts "RH.name: #{right_holder[:name]}"
+                         puts "RH.pseudos (#{right_holder[:pseudos].length.to_s}):"
+                         if right_holder[:pseudos].length > 0 then
+                              puts "  RH.pseudo: #{right_holder[:pseudos][0][:name]}"
+                         end
+                         puts "RH.ipi: #{right_holder[:ipi]}"
+                         puts "RH.share: #{right_holder[:share]}"
+                    end
+                    puts ""
+                    index += 1
+               end
+          end
+
           def numeric?(lookAhead)
                lookAhead =~ /[[:digit:]]/
           end
