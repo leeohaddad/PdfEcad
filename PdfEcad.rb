@@ -2,6 +2,7 @@ require 'pdf-reader'
 
 module Importers
      class Importers::PdfEcad
+          DEFAULT_AUTHOR = "CARLOS DE SOUZA"
           CATEGORIES = {"CA" => "Author", "E" => "Publisher", "V" => "Versionist", "SE" => "SubPublisher"}
           
           def initialize(filePath)
@@ -22,7 +23,7 @@ module Importers
                     # pageLines[3]: 
                     # pageLines[4]: 
                     # pageLines[5]:  ASSOCIAÇÃO: ABRAMUS - ASSOCIACAO BRASILEIRA DE MÚSICA
-                    authorName = pageLines[6].split('   ')[3].strip
+                    @authorName = pageLines[6].split('   ')[3].strip
                     # pageLines[7]: 
                     # pageLines[8]: 
                     # pageLines[9]: 
@@ -43,7 +44,7 @@ module Importers
                               else
                                    if (pageLines[loop_pivot][pageLines[loop_pivot].length-5] == '/') then # last work finished at end of page
                                         state = 2 # "Preparing to call work()"
-                                        worksHashes.push(work(authorName + " | " + workLine))
+                                        worksHashes.push(work(@authorName + " | " + workLine))
                                         state = 0 # "Seeking work"
                                    else # the work is present/described in both pages
                                         workLine += pageLines[loop_pivot]
@@ -67,7 +68,7 @@ module Importers
                                    else
                                         if (loop_pivot < pageLines.length-1)
                                              state = 2 # "Preparing to call work()"
-                                             worksHashes.push(work(authorName + " | " + workLine))
+                                             worksHashes.push(work(@authorName + " | " + workLine))
                                              state = 0 # "Seeking work"
                                         else
                                              state = 3 # "Work transcending pages"
@@ -85,66 +86,13 @@ module Importers
           end
           
           def right_holder(line)
-               puts "right_holder line:|#{line}|"
-          end
-          
-          def work(line)
-               components = line.split(' | ')
-               # step 1: parse informations about the work
-               authorName = components[0]
-               workDs = components[1]
-               informations = workDs.split('  ')
-               workHash = Hash.new
+               # puts "right_holder line:|#{line}|"
+               if (@authorName == nil)
+                    @authorName = DEFAULT_AUTHOR
+               end
+               informations = line.split('  ')
+               right_holder = Hash.new
                index = 0
-               # get external_id
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               external_ids = []
-               external_id = Hash.new
-               external_id[:source_name] = 'Ecad'
-               external_id[:source_id] = informations[index].strip
-               external_ids.push(external_id)
-               workHash[:external_ids] = external_ids
-               index += 1
-               # get iswc
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               workHash[:iswc] = informations[index].strip
-               index += 1
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               # if there is no iswc for this work, iswc is null
-               if workHash[:iswc] == '-'
-                    workHash[:iswc] = nil
-                    index += 3
-               end
-               # get title
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               workHash[:title] = informations[index].strip
-               index += 1
-               # get situation
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               workHash[:situation] = informations[index].strip
-               index += 1
-               # get created_at
-               while informations[index].length == 0 do
-                    index += 1
-               end
-               workHash[:created_at] = informations[index].strip
-               # step 2: parse informations about the right_holders
-               rh_index = 2
-               right_holders = []
-               while rh_index < components.length do
-                    informations = components[rh_index].split('  ')
-                    right_holder = Hash.new
-                    index = 0
                     # CÓDIGO does not belong to right_holder hash
                     index += 1
                     # get right_holder name
@@ -202,12 +150,70 @@ module Importers
                          right_holder[:share] += '00'
                     end
                     right_holder[:share] = right_holder[:share].to_f
-                    if authorName.eql? right_holder[:name] then
+                    if @authorName.eql? right_holder[:name] then
                          right_holder[:role] = 'Author'
                     else
                          right_holder[:role] = 'Publisher/Versionist/'
                     end
-                    right_holders.push(right_holder)
+                    return right_holder
+          end
+          
+          def work(line)
+               components = line.split(' | ')
+               # step 1: parse informations about the work
+               @authorName = components[0]
+               workDs = components[1]
+               informations = workDs.split('  ')
+               workHash = Hash.new
+               index = 0
+               # get external_id
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               external_ids = []
+               external_id = Hash.new
+               external_id[:source_name] = 'Ecad'
+               external_id[:source_id] = informations[index].strip
+               external_ids.push(external_id)
+               workHash[:external_ids] = external_ids
+               index += 1
+               # get iswc
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               workHash[:iswc] = informations[index].strip
+               index += 1
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               # if there is no iswc for this work, iswc is null
+               if workHash[:iswc] == '-'
+                    workHash[:iswc] = nil
+                    index += 3
+               end
+               # get title
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               workHash[:title] = informations[index].strip
+               index += 1
+               # get situation
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               workHash[:situation] = informations[index].strip
+               index += 1
+               # get created_at
+               while informations[index].length == 0 do
+                    index += 1
+               end
+               workHash[:created_at] = informations[index].strip
+               # step 2: parse informations about the right_holders
+               rh_index = 2
+               right_holders = []
+               while rh_index < components.length do
+                    this_right_holder = right_holder(components[rh_index])
+                    right_holders.push(this_right_holder)
                     rh_index += 1
                end
                workHash[:right_holders] = right_holders
