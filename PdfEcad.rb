@@ -129,11 +129,11 @@ module Importers
                caeEAssociacao = informations[index].split(' ')
                if numeric?(caeEAssociacao[0][0]) != nil then
                     right_holder[:ipi] = caeEAssociacao[0]
+                    right_holder[:ipi] = right_holder[:ipi].tr('.', '')
                     index += 1
                else 
-                    right_holder[:ipi] = ""
+                    right_holder[:ipi] = nil
                end
-               right_holder[:ipi] = right_holder[:ipi].tr('.', '')
                if caeEAssociacao.length > 1 && numeric?(caeEAssociacao[1][0]) == nil then
                     right_holder[:society_name] = caeEAssociacao[1].strip
                end
