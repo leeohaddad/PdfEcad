@@ -3,7 +3,7 @@ require 'pdf-reader'
 module Importers
      class Importers::PdfEcad
           DEFAULT_AUTHOR = "CARLOS DE SOUZA"
-          CATEGORIES = {"CA" => "Author", "E" => "Publisher", "V" => "Versionist", "SE" => "SubPublisher"}
+          CATEGORIES = {"CA" => "Author", "E" => "Publisher", "V" => "Versionist", "SE" => "SubPublisher", "C" => "Unknown"}
           
           def initialize(filePath)
                @pdfPath=filePath
@@ -220,7 +220,11 @@ module Importers
                right_holders = []
                while rh_index < components.length do
                     this_right_holder = right_holder(components[rh_index])
-                    right_holders.push(this_right_holder)
+                    if this_right_holder != nil then
+                         right_holders.push(this_right_holder)
+                    else
+                         puts "ERROR: Invalid right_holder: #{components[rh_index]}."
+                    end
                     rh_index += 1
                end
                workHash[:right_holders] = right_holders
@@ -228,6 +232,7 @@ module Importers
           end
 
           def debug_log(worksHashes)
+               index = 0
                length = worksHashes.length
                puts "Works Hashes (#{length}):"
                puts ""
