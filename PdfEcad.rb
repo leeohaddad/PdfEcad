@@ -198,9 +198,10 @@ module Importers
                     if right_holder[:share].length > 6 then
                          right_holder[:share] = right_holder[:share][0, right_holder[:share].length - 8].strip
                     end
-                    if right_holder[:share] == '100,' then
-                         right_holder[:share] = '100,00'
+                    if right_holder[:share][right_holder[:share].length-1] == ',' then
+                         right_holder[:share] += '00'
                     end
+                    right_holder[:share] = right_holder[:share].to_f
                     if authorName.eql? right_holder[:name] then
                          right_holder[:role] = 'Author'
                     else
