@@ -22,7 +22,7 @@ module Importers
                     # pageLines[3]: 
                     # pageLines[4]: 
                     # pageLines[5]:  ASSOCIAÇÃO: ABRAMUS - ASSOCIACAO BRASILEIRA DE MÚSICA
-                    # pageLines[6]:  TITULAR: 4882   CARLOS DE SOUZA   PSEUDÔNIMO: CARLOS CAREQA   CATEGORIA: TODAS
+                    authorName = pageLines[6].split('   ')[3].strip
                     # pageLines[7]: 
                     # pageLines[8]: 
                     # pageLines[9]: 
@@ -43,7 +43,7 @@ module Importers
                               else
                                    if (pageLines[loop_pivot][pageLines[loop_pivot].length-5] == '/') then # last work finished at end of page
                                         state = 2 # "Preparing to call work()"
-                                        worksHashes.push(work(workLine))
+                                        worksHashes.push(work(authorName + " | " + workLine))
                                         state = 0 # "Seeking work"
                                    else # the work is present/described in both pages
                                         workLine += pageLines[loop_pivot]
@@ -67,7 +67,7 @@ module Importers
                                    else
                                         if (loop_pivot < pageLines.length-1)
                                              state = 2 # "Preparing to call work()"
-                                             worksHashes.push(work(workLine))
+                                             worksHashes.push(work(authorName + " | " + workLine))
                                              state = 0 # "Seeking work"
                                         else
                                              state = 3 # "Work transcending pages"
@@ -91,7 +91,8 @@ module Importers
           def work(line)
                components = line.split(' | ')
                # step 1: parse informations about the work
-               workDs = components[0]
+               authorName = components[0]
+               workDs = components[1]
                informations = workDs.split('  ')
                workHash = Hash.new
                index = 0
@@ -120,7 +121,7 @@ module Importers
                     workHash[:iswc] = nil
                     index += 3
                end
-                    # get title
+               # get title
                while informations[index].length == 0 do
                     index += 1
                end
@@ -138,7 +139,7 @@ module Importers
                end
                workHash[:created_at] = informations[index].strip
                # step 2: parse informations about the right_holders
-               rh_index = 1
+               rh_index = 2
                right_holders = []
                while rh_index < components.length do
                     informations = components[rh_index].split('  ')
@@ -200,6 +201,11 @@ module Importers
                     if right_holder[:share] == '100,' then
                          right_holder[:share] = '100,00'
                     end
+                    if authorName.eql? right_holder[:name] then
+                         right_holder[:role] = 'Author'
+                    else
+                         right_holder[:role] = 'Publisher/Versionist/'
+                    end
                     right_holders.push(right_holder)
                     rh_index += 1
                end
@@ -232,6 +238,7 @@ module Importers
                          end
                          puts "RH.ipi: #{right_holder[:ipi]}"
                          puts "RH.share: #{right_holder[:share]}"
+                         puts "RH.role: #{right_holder[:role]}"
                     end
                     puts ""
                     index += 1
