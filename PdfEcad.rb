@@ -102,42 +102,42 @@ module Importers
                end
                external_ids = []
                external_id = Hash.new
-               external_id["source_name"] = "Ecad"
-               external_id["source_id"] = informations[index].strip
+               external_id[:source_name] = "Ecad"
+               external_id[:source_id] = informations[index].strip
                external_ids.push(external_id)
-               workHash["external_ids"] = external_ids
+               workHash[:external_ids] = external_ids
                index += 1
                # get iswc
                while informations[index].length == 0 do
                     index += 1
                end
-               workHash["iswc"] = informations[index].strip
+               workHash[:iswc] = informations[index].strip
                index += 1
                while informations[index].length == 0 do
                     index += 1
                end
                # if there is no iswc for this work, iswc is "- . . -"
                while  informations[index] == '.' || informations[index] == '-' do
-                    workHash["iswc"] += ' ' + informations[index].strip
+                    workHash[:iswc] += ' ' + informations[index].strip
                     index += 1
                end
                # get title
                while informations[index].length == 0 do
                     index += 1
                end
-               workHash["title"] = informations[index].strip
+               workHash[:title] = informations[index].strip
                # get situation
                index += 1
                while informations[index].length == 0 do
                     index += 1
                end
-               workHash["situation"] = informations[index].strip
+               workHash[:situation] = informations[index].strip
                index += 1
                # get created_at
                while informations[index].length == 0 do
                     index += 1
                end
-               workHash["created_at"] = informations[index].strip
+               workHash[:created_at] = informations[index].strip
           end
 
           def numeric?(lookAhead)
