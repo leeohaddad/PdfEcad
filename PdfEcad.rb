@@ -160,6 +160,9 @@ module Importers
                     right_holder[:share] += '00'
                end
                right_holder[:share] = right_holder[:share].tr(',','.').to_f
+               if right_holder[:name] == nil || right_holder[:role] == nil || right_holder[:share] == nil then
+                    return nil
+               end
                return right_holder
           end
           
@@ -225,7 +228,6 @@ module Importers
           end
 
           def debug_log(worksHashes)
-               index = 0
                length = worksHashes.length
                puts "Works Hashes (#{length}):"
                puts ""
