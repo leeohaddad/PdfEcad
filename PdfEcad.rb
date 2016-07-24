@@ -113,7 +113,7 @@ module Importers
                          index += 1
                     end
                     right_holder[:pseudos] = pseudos
-                    # get right_holder cae/ipi
+                    # get right_holder cae/ipi and society_name
                     while informations[index].length == 0 do
                          index += 1
                     end
@@ -124,7 +124,10 @@ module Importers
                     else 
                          right_holder[:ipi] = ""
                     end
-                    # get right_holder share
+                    if caeEAssociacao.length > 1 && numeric?(caeEAssociacao[1][0]) == nil then
+                         right_holder[:society_name] = caeEAssociacao[1].strip
+                    end
+                    # get right_holder role and share
                     if numeric?(informations[index][informations[index].length-1]) == nil then
                          index += 1
                     end
@@ -237,6 +240,7 @@ module Importers
                          puts "RH.ipi: #{right_holder[:ipi]}"
                          puts "RH.share: #{right_holder[:share]}"
                          puts "RH.role: #{right_holder[:role]}"
+                         puts "RH.society_name: #{right_holder[:society_name]}"
                     end
                     puts ""
                     index += 1
