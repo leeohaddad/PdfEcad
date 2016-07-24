@@ -9,8 +9,7 @@ module Importers
           end
           
           def works
-               $counter = 0
-               hashes = []
+               worksHashes = []
                reader = PDF::Reader.new(@pdfPath)
                state = 0 # "Seeking work"
                workLine = ""
@@ -44,7 +43,7 @@ module Importers
                               else
                                    if (pageLines[loop_pivot][pageLines[loop_pivot].length-5] == '/') then # last work finished at end of page
                                         state = 2 # "Preparing to call work()"
-                                        hashes.push(work(workLine))
+                                        worksHashes.push(work(workLine))
                                         state = 0 # "Seeking work"
                                    else # the work is present/described in both pages
                                         workLine += pageLines[loop_pivot]
@@ -59,7 +58,8 @@ module Importers
                                    if numeric?(pageLines[loop_pivot][0]) != nil && numeric?(pageLines[loop_pivot][pageLines[loop_pivot].length-1]) != nil && pageLines[loop_pivot][pageLines[loop_pivot].length-5]!='/' then
                                         # register a right holder
                                         workLine += ' | ' + pageLines[loop_pivot]
-                                        if pageLines[loop_pivot].length < 8 then # fix for specific error
+                                        # fix for specific error: for unknown reason, some right_holders are separated from theis CÓDIGO field
+                                        if pageLines[loop_pivot].length < 8 then
                                              loop_pivot += 1
                                              workLine += pageLines[loop_pivot]
                                         end
@@ -67,7 +67,7 @@ module Importers
                                    else
                                         if (loop_pivot < pageLines.length-1)
                                              state = 2 # "Preparing to call work()"
-                                             hashes.push(work(workLine))
+                                             worksHashes.push(work(workLine))
                                              state = 0 # "Seeking work"
                                         else
                                              state = 3 # "Work transcending pages"
@@ -81,7 +81,7 @@ module Importers
                     end
                     # pageLines[count-1]: 04/03/2015 - 16:35 *Situação da Obra : LB-LIBERADO / BL-BLOQUEADA / DU-DUPLICIDADE / HO-HOMONIMA / DP-DOMINIO PUBLICO / DE-DERIVADA / COPágina 4A / EC-EM CONFLITO
                end
-               puts "total: #{$counter}"
+               return worksHashes
           end
           
           def right_holder(line)
@@ -89,11 +89,10 @@ module Importers
           end
           
           def work(line)
-               $counter += 1
                components = line.split(' | ')
                # step 1: parse informations about the work
                workDs = components[0]
-               informations = workDs.split('   ')
+               informations = workDs.split('  ')
                workHash = Hash.new
                index = 0
                # get external_id
@@ -102,7 +101,7 @@ module Importers
                end
                external_ids = []
                external_id = Hash.new
-               external_id[:source_name] = "Ecad"
+               external_id[:source_name] = 'Ecad'
                external_id[:source_id] = informations[index].strip
                external_ids.push(external_id)
                workHash[:external_ids] = external_ids
@@ -116,18 +115,18 @@ module Importers
                while informations[index].length == 0 do
                     index += 1
                end
-               # if there is no iswc for this work, iswc is "- . . -"
-               while  informations[index] == '.' || informations[index] == '-' do
-                    workHash[:iswc] += ' ' + informations[index].strip
-                    index += 1
+               # if there is no iswc for this work, iswc is null
+               if workHash[:iswc] == '-'
+                    workHash[:iswc] = nil
+                    index += 3
                end
-               # get title
+                    # get title
                while informations[index].length == 0 do
                     index += 1
                end
                workHash[:title] = informations[index].strip
-               # get situation
                index += 1
+               # get situation
                while informations[index].length == 0 do
                     index += 1
                end
@@ -138,6 +137,74 @@ module Importers
                     index += 1
                end
                workHash[:created_at] = informations[index].strip
+               # step 2: parse informations about the right_holders
+               rh_index = 1
+               right_holders = []
+               while rh_index < components.length do
+                    informations = components[rh_index].split('  ')
+                    right_holder = Hash.new
+                    index = 0
+                    # CÓDIGO does not belong to right_holder hash
+                    index += 1
+                    # get right_holder name
+                    while informations[index].length == 0 do
+                         index += 1
+                    end
+                    right_holder[:name] = informations[index].strip
+                    index +=1
+                    # get right_holder pseudo
+                    pseudos = []
+                    information_checker = 0
+                    while informations[index].length == 0 do
+                         index += 1
+                         information_checker += 1
+                    end
+                    # if there is no pseudos, information_checks detects too many empty elements in informations array after right_holder name
+                    if information_checker < 15 then
+                         pseudo = Hash.new
+                         pseudo[:name] = informations[index].strip
+                         pseudo[:main] = true
+                         pseudos.push(pseudo)
+                         index += 1
+                    end
+                    right_holder[:pseudos] = pseudos
+                    # get right_holder cae/ipi
+                    while informations[index].length == 0 do
+                         index += 1
+                    end
+                    caeEAssociacao = informations[index].split(' ')
+                    if numeric?(caeEAssociacao[0][0]) != nil then
+                         right_holder[:ipi] = caeEAssociacao[0]
+                         index += 1
+                    else 
+                         right_holder[:ipi] = ""
+                    end
+                    # get right_holder share
+                    if numeric?(informations[index][informations[index].length-1]) == nil then
+                         index += 1
+                    end
+                    while informations[index].length == 0
+                         index += 1
+                    end
+                    catESPorcentagem = informations[index].split(' ')
+                    if catESPorcentagem.length > 1
+                         right_holder[:share] = catESPorcentagem[1].strip
+                    else
+                         index += 1
+                         right_holder[:share] = informations[index].strip
+                    end
+                    # fix for cat E works
+                    if right_holder[:share].length > 6 then
+                         right_holder[:share] = right_holder[:share][0, right_holder[:share].length - 8].strip
+                    end
+                    if right_holder[:share] == '100,' then
+                         right_holder[:share] = '100,00'
+                    end
+                    right_holders.push(right_holder)
+                    rh_index += 1
+               end
+               workHash[:right_holders] = right_holders
+               return workHash
           end
 
           def numeric?(lookAhead)
