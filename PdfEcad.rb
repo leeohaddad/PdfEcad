@@ -124,6 +124,7 @@ module Importers
                     else 
                          right_holder[:ipi] = ""
                     end
+                    right_holder[:ipi] = right_holder[:ipi].tr('.', '')
                     if caeEAssociacao.length > 1 && numeric?(caeEAssociacao[1][0]) == nil then
                          right_holder[:society_name] = caeEAssociacao[1].strip
                     end
