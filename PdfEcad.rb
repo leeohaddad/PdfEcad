@@ -159,7 +159,7 @@ module Importers
                if right_holder[:share][right_holder[:share].length-1] == ',' then
                     right_holder[:share] += '00'
                end
-               right_holder[:share] = right_holder[:share].to_f
+               right_holder[:share] = right_holder[:share].tr(',','.').to_f
                return right_holder
           end
           
